@@ -2,7 +2,7 @@
   "name": "expressbookreviews",
   "version": "1.0.0",
   "type": "module",
-  "description": "IBM final project — Book Review Application (ESM + JWT header)",
+  "description": "IBM final project — Book Review Application (ESM + JWT header + Axios)",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

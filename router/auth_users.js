@@ -30,9 +30,7 @@ router.post('/login', async (req, res) => {
     });
   }
 
-  const token = jwt.sign({ username }, 'access', {
-    expiresIn: '1h'
-  });
+  const token = jwt.sign({ username }, 'access', { expiresIn: '1h' });
 
   return res.status(200).json({
     message: 'User successfully logged in',
@@ -47,14 +45,11 @@ router.put('/auth/review/:isbn', (req, res) => {
   const username = req.user?.username;
 
   if (!username) {
-    return res.status(403).json({
-      message: 'User not authenticated'
-    });
+    return res.status(403).json({ message: 'User not authenticated' });
   }
 
   const book =
-    books[isbn] ||
-    Object.values(books).find((b) => b.isbn === isbn);
+    books[isbn] || Object.values(books).find((b) => b.isbn === isbn);
 
   if (!book) {
     return res.status(404).json({
@@ -63,14 +58,10 @@ router.put('/auth/review/:isbn', (req, res) => {
   }
 
   if (!review) {
-    return res.status(400).json({
-      message: 'Review text is required'
-    });
+    return res.status(400).json({ message: 'Review text is required' });
   }
 
-  const existing = book.reviews.find(
-    (r) => r.username === username
-  );
+  const existing = book.reviews.find((r) => r.username === username);
 
   if (existing) {
     existing.review = review;
@@ -93,14 +84,11 @@ router.delete('/auth/review/:isbn', (req, res) => {
   const username = req.user?.username;
 
   if (!username) {
-    return res.status(403).json({
-      message: 'User not authenticated'
-    });
+    return res.status(403).json({ message: 'User not authenticated' });
   }
 
   const book =
-    books[isbn] ||
-    Object.values(books).find((b) => b.isbn === isbn);
+    books[isbn] || Object.values(books).find((b) => b.isbn === isbn);
 
   if (!book) {
     return res.status(404).json({

@@ -1,9 +1,20 @@
 import express from 'express';
+import axios from 'axios';
 import bcrypt from 'bcryptjs';
-import books from './booksdb.js';
 import { users } from './auth_users.js';
 
 const router = express.Router();
+
+// URL interna desde la que Axios recupera los libros.
+// Se sirve como archivo estático desde index.js (data/books.json).
+const BOOKS_API_URL = 'http://localhost:5000/books.json';
+
+// Helper con Axios (usa async/await).
+// Recupera todos los libros desde el origen de datos.
+async function fetchAllBooks() {
+  const response = await axios.get(BOOKS_API_URL);
+  return response.data;
+}
 
 function doesExist(username) {
   return users.some((u) => u.username === username);
@@ -33,75 +44,117 @@ router.post('/register', async (req, res) => {
   });
 });
 
-// GET /  → todos los libros
+// GET /  → todos los libros (recuperados vía Axios con async/await)
 router.get('/', async (req, res) => {
-  return res.status(200).json(books);
+  try {
+    const books = await fetchAllBooks();
+    return res.status(200).json(books);
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Error retrieving books',
+      error: error.message
+    });
+  }
 });
 
-// GET /isbn/:isbn
+// GET /isbn/:isbn  → libro por ISBN (Axios + async/await)
 router.get('/isbn/:isbn', async (req, res) => {
-  const { isbn } = req.params;
-  const book =
-    books[isbn] ||
-    Object.values(books).find((b) => b.isbn === isbn);
+  try {
+    const { isbn } = req.params;
+    const books = await fetchAllBooks();
 
-  if (!book) {
-    return res.status(404).json({
-      message: `Book with ISBN ${isbn} not found`
+    const book =
+      books[isbn] ||
+      Object.values(books).find((b) => b.isbn === isbn);
+
+    if (!book) {
+      return res.status(404).json({
+        message: `Book with ISBN ${isbn} not found`
+      });
+    }
+
+    return res.status(200).json(book);
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Error retrieving book by ISBN',
+      error: error.message
     });
   }
-
-  return res.status(200).json(book);
 });
 
-// GET /author/:author
+// GET /author/:author  → libros por autor (Axios + async/await)
 router.get('/author/:author', async (req, res) => {
-  const { author } = req.params;
+  try {
+    const { author } = req.params;
+    const books = await fetchAllBooks();
 
-  const matches = Object.values(books).filter(
-    (b) => b.author.toLowerCase() === author.toLowerCase()
-  );
+    const matches = Object.values(books).filter(
+      (b) => b.author.toLowerCase() === author.toLowerCase()
+    );
 
-  if (matches.length === 0) {
-    return res.status(404).json({
-      message: `No books found for author ${author}`
+    if (matches.length === 0) {
+      return res.status(404).json({
+        message: `No books found for author ${author}`
+      });
+    }
+
+    return res.status(200).json(matches);
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Error retrieving books by author',
+      error: error.message
     });
   }
-
-  return res.status(200).json(matches);
 });
 
-// GET /title/:title
+// GET /title/:title  → libros por título (Axios + async/await)
 router.get('/title/:title', async (req, res) => {
-  const { title } = req.params;
+  try {
+    const { title } = req.params;
+    const books = await fetchAllBooks();
 
-  const matches = Object.values(books).filter((b) =>
-    b.title.toLowerCase().includes(title.toLowerCase())
-  );
+    const matches = Object.values(books).filter((b) =>
+      b.title.toLowerCase().includes(title.toLowerCase())
+    );
 
-  if (matches.length === 0) {
-    return res.status(404).json({
-      message: `No books found with title ${title}`
+    if (matches.length === 0) {
+      return res.status(404).json({
+        message: `No books found with title ${title}`
+      });
+    }
+
+    return res.status(200).json(matches);
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Error retrieving books by title',
+      error: error.message
     });
   }
-
-  return res.status(200).json(matches);
 });
 
-// GET /review/:isbn
+// GET /review/:isbn  → reseñas del libro (Axios + async/await)
 router.get('/review/:isbn', async (req, res) => {
-  const { isbn } = req.params;
-  const book =
-    books[isbn] ||
-    Object.values(books).find((b) => b.isbn === isbn);
+  try {
+    const { isbn } = req.params;
+    const books = await fetchAllBooks();
 
-  if (!book) {
-    return res.status(404).json({
-      message: `Book with ISBN ${isbn} not found`
+    const book =
+      books[isbn] ||
+      Object.values(books).find((b) => b.isbn === isbn);
+
+    if (!book) {
+      return res.status(404).json({
+        message: `Book with ISBN ${isbn} not found`
+      });
+    }
+
+    return res.status(200).json(book.reviews);
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Error retrieving reviews',
+      error: error.message
     });
   }
-
-  return res.status(200).json(book.reviews);
 });
 
 export default router;
